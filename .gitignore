@@ -1,0 +1,31 @@
+# Build outputs
+/build/
+app/build/
+
+# Gradle
+.gradle/
+gradle-wrapper.jar
+local.properties
+
+# Android
+*.apk
+*.aab
+*.ap_
+*.dex
+
+# IntelliJ / Android Studio
+/.idea/
+*.iml
+*.ipr
+*.iws
+.DS_Store
+
+# Keystore — never commit real keystores
+app/keystore/
+keystore/
+
+# Proguard
+/proguard/
+
+# Google services
+google-services.json
