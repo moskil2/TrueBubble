@@ -37,6 +37,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.runtime.mutableStateOf
@@ -46,6 +47,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.truebubble.ui.common.MiniHorizontalVial
 import com.truebubble.ui.common.MiniVerticalVial
+import com.truebubble.ui.common.SupportOverlay
+import com.truebubble.ui.common.SupportTopBarButton
 import com.truebubble.ui.level.AngleStatus
 import com.truebubble.ui.strings.LocalAppStrings
 import com.truebubble.ui.strings.flagFor
@@ -69,6 +72,7 @@ fun CircleLevelScreen(
     val s = LocalAppStrings.current
     val activity = LocalContext.current as Activity
     var showLangMenu by remember { mutableStateOf(false) }
+    val supportState = remember { MutableTransitionState(false) }
 
     val animRoll by animateFloatAsState(
         targetValue = state.roll,
@@ -115,6 +119,8 @@ fun CircleLevelScreen(
                 Icon(Icons.Outlined.Menu, contentDescription = s.menuBtn, tint = c.text2, modifier = Modifier.size(22.dp))
             }
             Spacer(Modifier.weight(1f))
+            SupportTopBarButton(expanded = supportState.targetState, onClick = { supportState.targetState = !supportState.targetState })
+            Spacer(Modifier.weight(1f))
             Box {
                 TopBarButton(label = "Lang", onClick = { showLangMenu = true }) {
                     Text(flagFor(s.langCode), fontSize = 20.sp)
@@ -139,12 +145,15 @@ fun CircleLevelScreen(
         }
 
         // Hero — spacery zamiast Arrangement.Center
-        Column(
+        Box(
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
             Spacer(Modifier.weight(1f))
 
             Canvas(modifier = Modifier.size(280.dp)) {
@@ -158,6 +167,7 @@ fun CircleLevelScreen(
                     lineColor = c.line,
                     highContrast = state.highContrastBubble,
                     bubbleColor = state.bubbleColor,
+                    isMetallic = state.isMetallicBubble,
                 )
             }
 
@@ -182,7 +192,7 @@ fun CircleLevelScreen(
                             softWrap = false,
                         )
                     }
-                    MiniVerticalVial(pitch = state.pitch, width = 26.dp, height = 60.dp, highContrast = state.highContrastBubble, bubbleColor = state.bubbleColor)
+                    MiniVerticalVial(pitch = state.pitch, width = 26.dp, height = 60.dp, highContrast = state.highContrastBubble, bubbleColor = state.bubbleColor, isMetallic = state.isMetallicBubble)
                 }
                 Box(
                     Modifier
@@ -205,11 +215,13 @@ fun CircleLevelScreen(
                             softWrap = false,
                         )
                     }
-                    MiniHorizontalVial(roll = state.roll, width = 64.dp, height = 26.dp, highContrast = state.highContrastBubble, bubbleColor = state.bubbleColor)
+                    MiniHorizontalVial(roll = state.roll, width = 64.dp, height = 26.dp, highContrast = state.highContrastBubble, bubbleColor = state.bubbleColor, isMetallic = state.isMetallicBubble)
                 }
             }
 
             Spacer(Modifier.weight(1f))
+            }
+            SupportOverlay(supportState)
         }
 
         // Zapamiętana wartość — stała wysokość żeby ekran nie skakał
@@ -223,7 +235,7 @@ fun CircleLevelScreen(
         ) {
             if (state.locked && rPitch != null && rRoll != null) {
                 Text(
-                    text = "Zapamiętano:  Wzdł. ${"%.1f".format(abs(rPitch))}°  ·  Poprz. ${"%.1f".format(abs(rRoll))}°",
+                    text = "${s.rememberedLine}:  ${s.longitudinalShort} ${"%.1f".format(abs(rPitch))}°  ·  ${s.transverseShort} ${"%.1f".format(abs(rRoll))}°",
                     fontSize = 12.sp,
                     color = Color.White,
                     fontFamily = FontFamily.Monospace,
@@ -251,7 +263,7 @@ fun CircleLevelScreen(
                     modifier = Modifier.size(18.dp),
                 )
                 Text(
-                    text = if (state.calibrated) "Skalibrowano" else "Nieskalibrowano",
+                    text = if (state.calibrated) s.calibrated else s.notCalibrated,
                     fontSize = 13.sp,
                     color = c.text2,
                 )
@@ -273,7 +285,7 @@ fun CircleLevelScreen(
                     modifier = Modifier.size(16.dp),
                 )
                 Text(
-                    text = if (state.locked) "Wyczyść" else "Zapamiętaj",
+                    text = if (state.locked) s.clear else s.remember,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     color = if (state.locked) AccentOk else c.text,
@@ -309,6 +321,7 @@ private fun DrawScope.drawBullseye(
     lineColor: Color,
     highContrast: Boolean = false,
     bubbleColor: Color = Color.White,
+    isMetallic: Boolean = false,
 ) {
     val center = Offset(size.width / 2f, size.height / 2f)
     val outerRadius = size.width / 2f - 2.dp.toPx()
@@ -346,6 +359,83 @@ private fun DrawScope.drawBullseye(
     )
 
     val toleranceRadius = outerRadius * 0.22f
+    val midRadius = outerRadius * 0.55f
+
+    val maxTravel = outerRadius - toleranceRadius - 30.dp.toPx()
+    val maxAngle = 30f
+    val bx = center.x + (animRoll.coerceIn(-maxAngle, maxAngle) / maxAngle) * maxTravel
+    val by = center.y - (animPitch.coerceIn(-maxAngle, maxAngle) / maxAngle) * maxTravel
+    val bubbleRadius = 28.dp.toPx()
+
+    if (isMetallic) {
+        val isGold = bubbleColor.blue < 0.1f
+        val shadow = if (isGold) Color(0xFF7A5200) else Color(0xFF3A3A48)
+        val mid    = if (isGold) Color(0xFFFFCC00) else Color(0xFFBEC0CC)
+        val bright = if (isGold) Color(0xFFFFF8D0) else Color(0xFFFFFFFF)
+        val rim    = if (isGold) Color(0xFF9B7200) else Color(0xFF787888)
+        drawCircle(
+            color = shadow.copy(alpha = 0.28f),
+            radius = bubbleRadius + 2.dp.toPx(),
+            center = Offset(bx + 1.5.dp.toPx(), by + 1.5.dp.toPx()),
+        )
+        drawCircle(
+            brush = Brush.radialGradient(
+                colors = listOf(bright, mid, shadow),
+                center = Offset(bx - bubbleRadius * 0.30f, by - bubbleRadius * 0.30f),
+                radius = bubbleRadius * 1.4f,
+            ),
+            radius = bubbleRadius,
+            center = Offset(bx, by),
+        )
+        drawCircle(
+            color = rim,
+            radius = bubbleRadius,
+            center = Offset(bx, by),
+            style = Stroke(width = 1.5.dp.toPx()),
+        )
+        val specR = bubbleRadius * 0.20f
+        val specX = bx - bubbleRadius * 0.36f
+        val specY = by - bubbleRadius * 0.36f
+        drawCircle(
+            brush = Brush.radialGradient(
+                colors = listOf(Color.White.copy(alpha = 0.85f), Color.White.copy(alpha = 0f)),
+                center = Offset(specX, specY),
+                radius = specR * 1.5f,
+            ),
+            radius = specR,
+            center = Offset(specX, specY),
+        )
+    } else {
+        val bubBase = bubbleColor
+        val ba1 = if (highContrast) 0.95f else 0.72f
+        val ba2 = if (highContrast) 0.75f else 0.14f
+        val ba3 = if (highContrast) 0.50f else 0.00f
+
+        drawCircle(
+            color = Color(0xFF28370A).copy(alpha = if (highContrast) 0.3f else 0.15f),
+            radius = bubbleRadius + 3.dp.toPx(),
+            center = Offset(bx + 2.dp.toPx(), by + 2.dp.toPx()),
+        )
+
+        drawCircle(
+            brush = Brush.radialGradient(
+                colors = listOf(bubBase.copy(alpha = ba1), bubBase.copy(alpha = ba2), bubBase.copy(alpha = ba3)),
+                center = Offset(bx - bubbleRadius * 0.3f, by - bubbleRadius * 0.35f),
+                radius = bubbleRadius,
+            ),
+            radius = bubbleRadius,
+            center = Offset(bx, by),
+        )
+
+        drawCircle(
+            color = bubBase.copy(alpha = if (highContrast) 0.70f else 0.45f),
+            radius = bubbleRadius,
+            center = Offset(bx, by),
+            style = Stroke(width = 1.5.dp.toPx()),
+        )
+    }
+
+    // Linie referencyjne rysowane nad łezką
     drawCircle(
         color = Color(0xFF28370A).copy(alpha = 0.35f),
         radius = toleranceRadius,
@@ -353,7 +443,6 @@ private fun DrawScope.drawBullseye(
         style = Stroke(width = 1.5.dp.toPx()),
     )
 
-    val midRadius = outerRadius * 0.55f
     drawCircle(
         color = Color(0xFF28370A).copy(alpha = 0.20f),
         radius = midRadius,
@@ -361,10 +450,14 @@ private fun DrawScope.drawBullseye(
         style = Stroke(width = 1.dp.toPx()),
     )
 
+    // Krzyż z przerwą w centrum (przerwa = promień łezki)
     val crossColor = Color(0xFF28370A).copy(alpha = 0.45f)
     val margin = outerRadius * 0.08f
-    drawLine(crossColor, Offset(center.x, center.y - outerRadius + margin), Offset(center.x, center.y + outerRadius - margin), 1.5.dp.toPx())
-    drawLine(crossColor, Offset(center.x - outerRadius + margin, center.y), Offset(center.x + outerRadius - margin, center.y), 1.5.dp.toPx())
+    val crossGap = bubbleRadius + 2.dp.toPx()
+    drawLine(crossColor, Offset(center.x, center.y - outerRadius + margin), Offset(center.x, center.y - crossGap), 1.5.dp.toPx())
+    drawLine(crossColor, Offset(center.x, center.y + crossGap), Offset(center.x, center.y + outerRadius - margin), 1.5.dp.toPx())
+    drawLine(crossColor, Offset(center.x - outerRadius + margin, center.y), Offset(center.x - crossGap, center.y), 1.5.dp.toPx())
+    drawLine(crossColor, Offset(center.x + crossGap, center.y), Offset(center.x + outerRadius - margin, center.y), 1.5.dp.toPx())
 
     for (i in 0 until 36) {
         val angleDeg = i * 10f
@@ -384,38 +477,4 @@ private fun DrawScope.drawBullseye(
             cap = StrokeCap.Round,
         )
     }
-
-    val maxTravel = outerRadius - toleranceRadius - 30.dp.toPx()
-    val maxAngle = 30f
-    val bx = center.x + (animRoll.coerceIn(-maxAngle, maxAngle) / maxAngle) * maxTravel
-    val by = center.y - (animPitch.coerceIn(-maxAngle, maxAngle) / maxAngle) * maxTravel
-    val bubbleRadius = 28.dp.toPx()
-
-    val bubBase = bubbleColor
-    val ba1 = if (highContrast) 0.95f else 0.72f
-    val ba2 = if (highContrast) 0.75f else 0.14f
-    val ba3 = if (highContrast) 0.50f else 0.00f
-
-    drawCircle(
-        color = Color(0xFF28370A).copy(alpha = if (highContrast) 0.3f else 0.15f),
-        radius = bubbleRadius + 3.dp.toPx(),
-        center = Offset(bx + 2.dp.toPx(), by + 2.dp.toPx()),
-    )
-
-    drawCircle(
-        brush = Brush.radialGradient(
-            colors = listOf(bubBase.copy(alpha = ba1), bubBase.copy(alpha = ba2), bubBase.copy(alpha = ba3)),
-            center = Offset(bx - bubbleRadius * 0.3f, by - bubbleRadius * 0.35f),
-            radius = bubbleRadius,
-        ),
-        radius = bubbleRadius,
-        center = Offset(bx, by),
-    )
-
-    drawCircle(
-        color = bubBase.copy(alpha = if (highContrast) 0.70f else 0.45f),
-        radius = bubbleRadius,
-        center = Offset(bx, by),
-        style = Stroke(width = 1.5.dp.toPx()),
-    )
 }

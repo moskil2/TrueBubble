@@ -10,14 +10,16 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:theme="@style/Theme.TrueBubble"
         android:supportsRtl="true"
-        android:keepScreenOn="true">
+        android:allowBackup="false"
+        android:dataExtractionRules="@xml/data_extraction_rules">
 
         <activity
             android:name=".MainActivity"
             android:exported="true"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustResize"
-            android:enableOnBackInvokedCallback="true">
+            android:enableOnBackInvokedCallback="true"
+            android:keepScreenOn="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

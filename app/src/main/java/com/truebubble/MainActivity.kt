@@ -11,11 +11,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.truebubble.data.SettingsRepository
 import com.truebubble.ui.settings.SettingsViewModel
 import com.truebubble.ui.theme.TrueBubbleTheme
-import kotlinx.coroutines.flow.first
-import androidx.compose.runtime.collectAsState
 import androidx.compose.material3.Surface
 import com.truebubble.ui.theme.LocalAppColors
 

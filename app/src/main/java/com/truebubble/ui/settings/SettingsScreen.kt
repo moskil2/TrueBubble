@@ -17,6 +17,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -53,7 +56,7 @@ fun SettingsScreen(
             horizontalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             IconButton(onClick = onBack) {
-                Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "Wstecz", tint = c.text)
+                Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = s.back, tint = c.text)
             }
             Text(s.settingsTitle, fontSize = 21.sp, fontWeight = FontWeight.SemiBold, color = c.text)
         }
@@ -98,6 +101,8 @@ fun SettingsScreen(
             val bubbleColors = listOf(
                 Color.White, Color(0xFFFF7A00), Color(0xFFFFD600), Color(0xFF00CCFF), Color(0xFFFF4444),
                 Color(0xFF1C1C1E), Color(0xFF9B30FF),
+                Color(0xFFFFCC00),  // Gold
+                Color(0xFFD4D8E0),  // Silver
             )
             val accent = if (c.isDark) AccentOk else AccentOkDark
             Column(
@@ -107,21 +112,17 @@ fun SettingsScreen(
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 Text(s.bubbleColorLabel, fontSize = 16.sp, color = c.text)
+                // Row 1: White, Orange, Yellow, Cyan, Red (indices 0-4)
                 Row(horizontalArrangement = Arrangement.spacedBy(9.dp)) {
-                    bubbleColors.forEachIndexed { idx, color ->
-                        val selected = settings.bubbleColorIndex == idx
-                        Box(
-                            modifier = Modifier
-                                .size(34.dp)
-                                .clip(androidx.compose.foundation.shape.CircleShape)
-                                .background(color)
-                                .border(
-                                    width = if (selected) 2.5.dp else 1.dp,
-                                    color = if (selected) accent else c.line,
-                                    shape = androidx.compose.foundation.shape.CircleShape,
-                                )
-                                .clickable { vm.setBubbleColor(idx) },
-                        )
+                    bubbleColors.take(5).forEachIndexed { idx, color ->
+                        ColorSwatch(color = color, idx = idx, selected = settings.bubbleColorIndex == idx, accent = accent, line = c.line, isMetallic = false) { vm.setBubbleColor(idx) }
+                    }
+                }
+                // Row 2: Black, Purple, Gold, Silver (indices 5-8)
+                Row(horizontalArrangement = Arrangement.spacedBy(9.dp)) {
+                    bubbleColors.drop(5).forEachIndexed { relIdx, color ->
+                        val idx = relIdx + 5
+                        ColorSwatch(color = color, idx = idx, selected = settings.bubbleColorIndex == idx, accent = accent, line = c.line, isMetallic = idx >= 7) { vm.setBubbleColor(idx) }
                     }
                 }
             }
@@ -250,6 +251,44 @@ private fun SwitchRow(title: String, subtitle: String, checked: Boolean, onCheck
             )
         }
     }
+}
+
+@Composable
+private fun ColorSwatch(
+    color: Color,
+    idx: Int,
+    selected: Boolean,
+    accent: Color,
+    line: Color,
+    isMetallic: Boolean,
+    onClick: () -> Unit,
+) {
+    val isGold = idx == 7
+    Box(
+        modifier = Modifier
+            .size(34.dp)
+            .clip(CircleShape)
+            .then(
+                if (isMetallic) Modifier.drawBehind {
+                    val bright = if (isGold) Color(0xFFFFF8D0) else Color(0xFFFFFFFF)
+                    val mid    = if (isGold) Color(0xFFFFCC00) else Color(0xFFD4D8E0)
+                    val shadow = if (isGold) Color(0xFF7A5200) else Color(0xFF3A3A48)
+                    drawCircle(
+                        brush = Brush.radialGradient(
+                            colors = listOf(bright, mid, shadow),
+                            center = Offset(size.width * 0.32f, size.height * 0.32f),
+                            radius = size.minDimension * 0.9f,
+                        ),
+                    )
+                } else Modifier.background(color)
+            )
+            .border(
+                width = if (selected) 2.5.dp else 1.dp,
+                color = if (selected) accent else line,
+                shape = CircleShape,
+            )
+            .clickable { onClick() },
+    )
 }
 
 @Composable

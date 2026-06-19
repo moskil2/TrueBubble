@@ -8,6 +8,7 @@ import com.truebubble.data.SettingsRepository
 import com.truebubble.sensor.CalibrationRepository
 import com.truebubble.sensor.orientationFlow
 import com.truebubble.ui.level.bubbleColorFromIndex
+import com.truebubble.ui.level.isMetallicColorIndex
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -28,6 +29,9 @@ data class CalibrationUiState(
     val livePitch: Float = 0f,
     val liveRoll: Float = 0f,
     val bubbleColor: Color = Color.White,
+    val isMetallicBubble: Boolean = false,
+    val isPitchEditing: Boolean = false,
+    val isRollEditing: Boolean = false,
 )
 
 class CalibrationViewModel(application: Application) : AndroidViewModel(application) {
@@ -51,11 +55,12 @@ class CalibrationViewModel(application: Application) : AndroidViewModel(applicat
                     pitchOffset = cal.pitchOffset,
                     rollOffset = cal.rollOffset,
                     lastCalibrationDate = cal.lastDate,
-                    pitchInputText = if (s.isCalibrating) s.pitchInputText else "%.2f".format(cal.pitchOffset),
-                    rollInputText = if (s.isCalibrating) s.rollInputText else "%.2f".format(cal.rollOffset),
+                    pitchInputText = if (s.isCalibrating || s.isPitchEditing) s.pitchInputText else "%.2f".format(cal.pitchOffset),
+                    rollInputText = if (s.isCalibrating || s.isRollEditing) s.rollInputText else "%.2f".format(cal.rollOffset),
                     livePitch = if (!s.isCalibrating) o.pitch - cal.pitchOffset else s.livePitch,
                     liveRoll = if (!s.isCalibrating) o.roll - cal.rollOffset else s.liveRoll,
                     bubbleColor = bubbleColorFromIndex(settings.bubbleColorIndex),
+                    isMetallicBubble = isMetallicColorIndex(settings.bubbleColorIndex),
                 )
             }
         }
@@ -79,16 +84,18 @@ class CalibrationViewModel(application: Application) : AndroidViewModel(applicat
     fun decrementPitch() = adjustPitch(-0.01f)
 
     fun setPitchText(text: String) {
-        _state.value = _state.value.copy(pitchInputText = text)
+        _state.value = _state.value.copy(pitchInputText = text, isPitchEditing = true)
     }
 
     fun commitPitchText() {
+        _state.value = _state.value.copy(isPitchEditing = false)
         val v = _state.value.pitchInputText.replace(",", ".").toFloatOrNull() ?: return
         viewModelScope.launch { repo.setPitchOffset(round(v * 100f) / 100f) }
     }
 
     private fun adjustPitch(delta: Float) {
         val newVal = round((_state.value.pitchOffset + delta) * 100f) / 100f
+        _state.value = _state.value.copy(isPitchEditing = false)
         viewModelScope.launch { repo.setPitchOffset(newVal) }
     }
 
@@ -96,16 +103,18 @@ class CalibrationViewModel(application: Application) : AndroidViewModel(applicat
     fun decrementRoll() = adjustRoll(-0.01f)
 
     fun setRollText(text: String) {
-        _state.value = _state.value.copy(rollInputText = text)
+        _state.value = _state.value.copy(rollInputText = text, isRollEditing = true)
     }
 
     fun commitRollText() {
+        _state.value = _state.value.copy(isRollEditing = false)
         val v = _state.value.rollInputText.replace(",", ".").toFloatOrNull() ?: return
         viewModelScope.launch { repo.setRollOffset(round(v * 100f) / 100f) }
     }
 
     private fun adjustRoll(delta: Float) {
         val newVal = round((_state.value.rollOffset + delta) * 100f) / 100f
+        _state.value = _state.value.copy(isRollEditing = false)
         viewModelScope.launch { repo.setRollOffset(newVal) }
     }
 

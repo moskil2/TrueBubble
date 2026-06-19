@@ -37,8 +37,12 @@ fun orientationFlow(context: Context): Flow<OrientationAngles> = callbackFlow {
                 SensorManager.getRotationMatrixFromVector(rotMat, event.values)
                 SensorManager.getOrientation(rotMat, orientation)
                 val rawAzimuth = Math.toDegrees(orientation[0].toDouble()).toFloat()
-                val rawPitch = Math.toDegrees(orientation[1].toDouble()).toFloat()
-                val rawRoll = Math.toDegrees(orientation[2].toDouble()).toFloat()
+                // Elevation-angle formula: measures angle of each device axis from horizontal.
+                // Uses column 1 (Y_device) and column 0 (X_device) of the rotation matrix.
+                // Invariant to screen-facing direction → stable readings when phone is held
+                // edge-against-wall in any screen orientation (no ±180° discontinuity).
+                val rawPitch = Math.toDegrees(Math.atan2(-rotMat[7].toDouble(), Math.sqrt((rotMat[1] * rotMat[1] + rotMat[4] * rotMat[4]).toDouble()))).toFloat()
+                val rawRoll  = Math.toDegrees(Math.atan2(-rotMat[6].toDouble(), Math.sqrt((rotMat[0] * rotMat[0] + rotMat[3] * rotMat[3]).toDouble()))).toFloat()
                 // Exponential smoothing
                 smoothAzimuth = lerpAngle(smoothAzimuth, rawAzimuth, 0.3f)
                 smoothPitch = lerp(smoothPitch, rawPitch, 0.3f)

@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.Color
 import com.truebubble.ui.level.AngleStatus
 import com.truebubble.ui.level.angleStatus
 import com.truebubble.ui.level.bubbleColorFromIndex
+import com.truebubble.ui.level.isMetallicColorIndex
 import kotlin.math.sqrt
 
 data class CircleLevelUiState(
@@ -30,13 +31,14 @@ data class CircleLevelUiState(
     val rememberedRoll: Float? = null,
     val highContrastBubble: Boolean = false,
     val bubbleColor: Color = Color.White,
+    val isMetallicBubble: Boolean = false,
 )
 
 class CircleLevelViewModel(application: Application) : AndroidViewModel(application) {
 
     private val calibrationRepo = CalibrationRepository(application)
     private val settingsRepo = SettingsRepository(application)
-    val feedback = FeedbackController(application)
+    private val feedback = FeedbackController(application)
 
     private val _state = MutableStateFlow(CircleLevelUiState())
     val state: StateFlow<CircleLevelUiState> = _state
@@ -66,6 +68,7 @@ class CircleLevelViewModel(application: Application) : AndroidViewModel(applicat
                         rememberedRoll = _state.value.rememberedRoll,
                         highContrastBubble = settings.highContrastBubble,
                         bubbleColor = bubbleColorFromIndex(settings.bubbleColorIndex),
+                        isMetallicBubble = isMetallicColorIndex(settings.bubbleColorIndex),
                     )
                 }
         }

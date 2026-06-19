@@ -17,8 +17,8 @@ android {
         applicationId = "com.truebubble"
         minSdk = 26
         targetSdk = 36
-        versionCode = 11
-        versionName = "0.11"
+        versionCode = 21
+        versionName = "0.21"
         buildConfigField("String", "BUILD_TIME", "\"$buildTime\"")
     }
 
@@ -33,8 +33,9 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
-            isShrinkResources = false
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             signingConfig = signingConfigs.getByName("release")
         }
         debug {

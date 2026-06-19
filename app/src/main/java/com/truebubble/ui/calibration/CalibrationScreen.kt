@@ -31,6 +31,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -137,7 +138,7 @@ fun CalibrationScreen(
             SectionLabel(s.manualCorrection)
 
             Text(
-                text = "Drobna korekta przesunięcia co 0.01°. Możesz też wpisać wartość ręcznie.",
+                text = s.manualCorrectionSub,
                 fontSize = 13.sp,
                 color = c.text2,
                 lineHeight = 19.sp,
@@ -150,6 +151,7 @@ fun CalibrationScreen(
                 currentLiveAngle = state.livePitch,
                 isVertical = true,
                 bubbleColor = state.bubbleColor,
+                isMetallic = state.isMetallicBubble,
                 onDecrement = { vm.decrementPitch() },
                 onIncrement = { vm.incrementPitch() },
                 onTextChange = { vm.setPitchText(it) },
@@ -163,6 +165,7 @@ fun CalibrationScreen(
                 currentLiveAngle = state.liveRoll,
                 isVertical = false,
                 bubbleColor = state.bubbleColor,
+                isMetallic = state.isMetallicBubble,
                 onDecrement = { vm.decrementRoll() },
                 onIncrement = { vm.incrementRoll() },
                 onTextChange = { vm.setRollText(it) },
@@ -170,7 +173,7 @@ fun CalibrationScreen(
             )
 
             // ── KARTA DANYCH ──────────────────────────────────────────────────
-            SectionLabel("DANE KALIBRACJI")
+            SectionLabel(s.calibrationData)
 
             Column(
                 modifier = Modifier
@@ -233,7 +236,7 @@ private fun SectionLabel(text: String) {
     val c = LocalAppColors.current
     Text(
         text = text,
-        fontSize = 11.sp,
+        fontSize = 13.sp,
         letterSpacing = 1.5.sp,
         fontWeight = FontWeight.SemiBold,
         color = c.text3,
@@ -267,6 +270,7 @@ private fun OffsetAdjustRow(
     currentLiveAngle: Float,
     isVertical: Boolean,
     bubbleColor: androidx.compose.ui.graphics.Color = androidx.compose.ui.graphics.Color.White,
+    isMetallic: Boolean = false,
     onDecrement: () -> Unit,
     onIncrement: () -> Unit,
     onTextChange: (String) -> Unit,
@@ -302,14 +306,14 @@ private fun OffsetAdjustRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 if (isVertical) {
-                    MiniVerticalVial(pitch = currentLiveAngle, width = 18.dp, height = 40.dp, highContrast = true, bubbleColor = bubbleColor)
+                    MiniVerticalVial(pitch = currentLiveAngle, width = 24.dp, height = 54.dp, highContrast = true, bubbleColor = bubbleColor, isMetallic = isMetallic)
                 } else {
-                    MiniHorizontalVial(roll = currentLiveAngle, width = 48.dp, height = 18.dp, highContrast = true, bubbleColor = bubbleColor)
+                    MiniHorizontalVial(roll = currentLiveAngle, width = 62.dp, height = 24.dp, highContrast = true, bubbleColor = bubbleColor, isMetallic = isMetallic)
                 }
-                Box(modifier = Modifier.width(54.dp)) {
+                Box(modifier = Modifier.width(68.dp)) {
                     Text(
                         text = "%.1f°".format(abs(currentLiveAngle)),
-                        fontSize = 14.sp,
+                        fontSize = 18.sp,
                         fontFamily = FontFamily.Monospace,
                         fontWeight = FontWeight.SemiBold,
                         color = liveColor,
@@ -330,8 +334,8 @@ private fun OffsetAdjustRow(
                 modifier = Modifier.size(44.dp),
                 shape = RoundedCornerShape(10.dp),
                 contentPadding = PaddingValues(0.dp),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = c.text),
-                border = androidx.compose.foundation.BorderStroke(1.dp, c.line),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = AccentOk),
+                border = androidx.compose.foundation.BorderStroke(1.dp, AccentOk.copy(alpha = 0.5f)),
             ) {
                 Text("−", fontSize = 20.sp, fontWeight = FontWeight.Light)
             }
@@ -342,7 +346,7 @@ private fun OffsetAdjustRow(
                 modifier = Modifier.weight(1f),
                 singleLine = true,
                 suffix = { Text("°", fontSize = 14.sp, color = c.text2) },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Done),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text, capitalization = KeyboardCapitalization.None, autoCorrectEnabled = false, imeAction = ImeAction.Done),
                 keyboardActions = KeyboardActions(onDone = { onCommit() }),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = AccentOk,

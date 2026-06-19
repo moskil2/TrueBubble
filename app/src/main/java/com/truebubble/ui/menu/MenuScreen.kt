@@ -32,6 +32,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import com.truebubble.R
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -140,12 +141,40 @@ fun MenuScreen(onBack: () -> Unit) {
             // ── Accordion tiles ──────────────────────────────────────────────
 
             AccordionTile(icon = Icons.Outlined.Favorite, title = s.supportTitle) {
+                val uriHandler = LocalUriHandler.current
                 Text(
                     text = s.supportText,
                     fontSize = 13.sp,
                     color = c.text2,
                     lineHeight = 20.sp,
                 )
+                Spacer(Modifier.height(12.dp))
+                val website = "spotrobotics.app"
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { uriHandler.openUri("https://spotrobotics.app") },
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = website,
+                        fontSize = 16.sp,
+                        color = AccentOk,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier.weight(1f),
+                    )
+                    IconButton(
+                        onClick = {
+                            val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                            clipboard.setPrimaryClip(ClipData.newPlainText("website", website))
+                            Toast.makeText(context, s.copiedToClipboard, Toast.LENGTH_SHORT).show()
+                        },
+                        modifier = Modifier.size(36.dp),
+                    ) {
+                        Icon(Icons.Outlined.ContentCopy, contentDescription = null, tint = AccentOk, modifier = Modifier.size(18.dp))
+                    }
+                }
             }
 
             AccordionTile(icon = Icons.Outlined.Security, title = s.securityTitle) {
@@ -169,12 +198,7 @@ fun MenuScreen(onBack: () -> Unit) {
             AccordionTile(icon = Icons.Outlined.Email, title = s.contactTitle) {
                 val email = "tomasz.pieczara@gazeta.pl"
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(c.bg)
-                        .border(1.dp, c.line, RoundedCornerShape(10.dp))
-                        .padding(12.dp),
+                    modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {

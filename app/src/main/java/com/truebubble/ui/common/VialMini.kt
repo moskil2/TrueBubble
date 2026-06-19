@@ -26,6 +26,7 @@ fun MiniHorizontalVial(
     height: Dp = 24.dp,
     highContrast: Boolean = false,
     bubbleColor: Color = Color.White,
+    isMetallic: Boolean = false,
 ) {
     val c = LocalAppColors.current
     val animRoll by animateFloatAsState(
@@ -40,7 +41,8 @@ fun MiniHorizontalVial(
         val maxTravel = size.width / 2f - inset - bubR
         val bx = size.width / 2f + animRoll * maxTravel
         val by = size.height / 2f
-        drawMiniBubble(bx, by, bubR, bubbleColor, highContrast)
+        drawMiniBubble(bx, by, bubR, bubbleColor, highContrast, isMetallic)
+        drawMiniVialMarks(horizontal = true)
     }
 }
 
@@ -51,6 +53,7 @@ fun MiniVerticalVial(
     height: Dp = 72.dp,
     highContrast: Boolean = false,
     bubbleColor: Color = Color.White,
+    isMetallic: Boolean = false,
 ) {
     val c = LocalAppColors.current
     val animPitch by animateFloatAsState(
@@ -65,7 +68,8 @@ fun MiniVerticalVial(
         val maxTravel = size.height / 2f - inset - bubR
         val bx = size.width / 2f
         val by = size.height / 2f - animPitch * maxTravel
-        drawMiniBubble(bx, by, bubR, bubbleColor, highContrast)
+        drawMiniBubble(bx, by, bubR, bubbleColor, highContrast, isMetallic)
+        drawMiniVialMarks(horizontal = false)
     }
 }
 
@@ -103,6 +107,10 @@ private fun DrawScope.drawMiniVialBody(
         cornerRadius = innerR,
     )
 
+}
+
+private fun DrawScope.drawMiniVialMarks(horizontal: Boolean) {
+    val inset = 3.dp.toPx()
     val bubInset = 4.dp.toPx()
     val markGap = if (horizontal)
         (size.height / 2f - bubInset + 3.dp.toPx()).coerceAtLeast(4.dp.toPx())
@@ -120,7 +128,30 @@ private fun DrawScope.drawMiniVialBody(
     }
 }
 
-private fun DrawScope.drawMiniBubble(cx: Float, cy: Float, radius: Float, bubbleColor: Color = Color.White, highContrast: Boolean = false) {
+private fun DrawScope.drawMiniBubble(cx: Float, cy: Float, radius: Float, bubbleColor: Color = Color.White, highContrast: Boolean = false, isMetallic: Boolean = false) {
+    if (isMetallic) {
+        val isGold = bubbleColor.blue < 0.1f
+        val shadow = if (isGold) Color(0xFF7A5200) else Color(0xFF3A3A48)
+        val mid    = if (isGold) Color(0xFFFFCC00) else Color(0xFFBEC0CC)
+        val bright = if (isGold) Color(0xFFFFF8D0) else Color(0xFFFFFFFF)
+        val rim    = if (isGold) Color(0xFF9B7200) else Color(0xFF787888)
+        drawCircle(
+            brush = Brush.radialGradient(
+                colors = listOf(bright, mid, shadow),
+                center = Offset(cx - radius * 0.30f, cy - radius * 0.30f),
+                radius = radius * 1.4f,
+            ),
+            radius = radius,
+            center = Offset(cx, cy),
+        )
+        drawCircle(
+            color = rim,
+            radius = radius,
+            center = Offset(cx, cy),
+            style = Stroke(1.dp.toPx()),
+        )
+        return
+    }
     val base = bubbleColor
     val a1 = if (highContrast) 0.95f else 0.85f
     val a2 = if (highContrast) 0.75f else 0.40f

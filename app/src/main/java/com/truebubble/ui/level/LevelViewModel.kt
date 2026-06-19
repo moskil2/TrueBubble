@@ -22,8 +22,12 @@ fun bubbleColorFromIndex(idx: Int): Color = when (idx) {
     4 -> Color(0xFFFF4444)
     5 -> Color(0xFF1C1C1E)
     6 -> Color(0xFF9B30FF)
+    7 -> Color(0xFFFFCC00)  // Gold
+    8 -> Color(0xFFD4D8E0)  // Silver
     else -> Color.White
 }
+
+fun isMetallicColorIndex(idx: Int) = idx == 7 || idx == 8
 
 data class LevelUiState(
     val pitch: Float = 0f,
@@ -39,6 +43,7 @@ data class LevelUiState(
     val rememberedRoll: Float? = null,
     val highContrastBubble: Boolean = false,
     val bubbleColor: Color = Color.White,
+    val isMetallicBubble: Boolean = false,
 )
 
 enum class AngleStatus { OK, WARN, ERROR }
@@ -53,8 +58,7 @@ class LevelViewModel(application: Application) : AndroidViewModel(application) {
 
     private val calibrationRepo = CalibrationRepository(application)
     private val settingsRepo = SettingsRepository(application)
-    private val pitchFeedback = FeedbackController(application)
-    private val rollFeedback = FeedbackController(application)
+    private val feedback = FeedbackController(application)
 
     private val _state = MutableStateFlow(LevelUiState())
     val state: StateFlow<LevelUiState> = _state
@@ -87,9 +91,9 @@ class LevelViewModel(application: Application) : AndroidViewModel(application) {
                     rememberedRoll = _state.value.rememberedRoll,
                     highContrastBubble = settings.highContrastBubble,
                     bubbleColor = bubbleColorFromIndex(settings.bubbleColorIndex),
+                    isMetallicBubble = isMetallicColorIndex(settings.bubbleColorIndex),
                 )
-                pitchFeedback.onAngleUpdate(pitchOk, settings.soundOnLevel, settings.vibrateOnLevel)
-                rollFeedback.onAngleUpdate(rollOk, settings.soundOnLevel, settings.vibrateOnLevel)
+                feedback.onAngleUpdate(both, settings.soundOnLevel, settings.vibrateOnLevel)
                 _state.value = newState
             }
         }
@@ -99,8 +103,7 @@ class LevelViewModel(application: Application) : AndroidViewModel(application) {
         val current = _state.value
         if (current.locked) {
             _state.update { it.copy(locked = false, rememberedPitch = null, rememberedRoll = null) }
-            pitchFeedback.resetDebounce()
-            rollFeedback.resetDebounce()
+            feedback.resetDebounce()
         } else {
             _state.update { it.copy(locked = true, rememberedPitch = current.pitch, rememberedRoll = current.roll) }
         }
@@ -108,8 +111,7 @@ class LevelViewModel(application: Application) : AndroidViewModel(application) {
 
     override fun onCleared() {
         super.onCleared()
-        pitchFeedback.release()
-        rollFeedback.release()
+        feedback.release()
     }
 
 }
