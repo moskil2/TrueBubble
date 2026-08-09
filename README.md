@@ -18,6 +18,15 @@
 - **10 languages** — Polski, English, Español, Deutsch, Français, Português (BR), العربية, Русский, Bahasa Indonesia, 日本語
 - No ads, no tracking, no internet permissions
 
+## Download
+
+TrueBubble is currently in **closed testing** on Google Play, so the install link only works for testers. It takes two clicks to get in:
+
+1. **[Join the tester group](https://groups.google.com/g/truebubble)** - sign in with the same Google account you use on the Play Store, then hit "Join group".
+2. **[Open the Play Store testing link](https://play.google.com/apps/testing/app.spotrobotics.truebubble)** on your phone - once you're a member, Google Play unlocks the install button for you automatically.
+
+That's it - after the first install, TrueBubble updates itself through Google Play like any other app.
+
 ## Screenshots
 
 _Coming soon_
