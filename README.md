@@ -1,6 +1,22 @@
 # TrueBubble
 
-**TrueBubble** is a free, ad-free spirit level app for Android — precise, clean, and built with passion.
+<p align="center">
+  <img src="LOGO.png" width="180" alt="TrueBubble icon" />
+</p>
+
+<p align="center">
+  <strong>TrueBubble</strong> is a free, ad-free spirit level app for Android - precise, clean, and built with passion.
+</p>
+
+<table align="center">
+  <tr>
+    <td><img src="screenshots/1.jpg" width="140" alt="TrueBubble screenshot 1" /></td>
+    <td><img src="screenshots/2.jpg" width="140" alt="TrueBubble screenshot 2" /></td>
+    <td><img src="screenshots/3.jpg" width="140" alt="TrueBubble screenshot 3" /></td>
+    <td><img src="screenshots/4.jpg" width="140" alt="TrueBubble screenshot 4" /></td>
+    <td><img src="screenshots/5.jpg" width="140" alt="TrueBubble screenshot 5" /></td>
+  </tr>
+</table>
 
 ## Features
 
@@ -26,10 +42,6 @@ TrueBubble is currently in **closed testing** on Google Play, so the install lin
 2. **[Open the Play Store testing link](https://play.google.com/apps/testing/app.spotrobotics.truebubble)** on your phone - once you're a member, Google Play unlocks the install button for you automatically.
 
 That's it - after the first install, TrueBubble updates itself through Google Play like any other app.
-
-## Screenshots
-
-_Coming soon_
 
 ## Requirements
 
