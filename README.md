@@ -8,6 +8,10 @@
   <strong>TrueBubble</strong> is a free, ad-free spirit level app for Android - precise, clean, and built with passion.
 </p>
 
+<p align="center">
+  <a href="https://spotrobotics.app/truebubble/">Presentation page</a>
+</p>
+
 <table align="center">
   <tr>
     <td><img src="screenshots/1.jpg" width="140" alt="TrueBubble screenshot 1" /></td>
