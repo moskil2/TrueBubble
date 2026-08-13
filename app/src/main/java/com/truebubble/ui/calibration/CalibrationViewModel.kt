@@ -9,6 +9,7 @@ import com.truebubble.sensor.CalibrationRepository
 import com.truebubble.sensor.orientationFlow
 import com.truebubble.ui.level.bubbleColorFromIndex
 import com.truebubble.ui.level.isMetallicColorIndex
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -42,8 +43,15 @@ class CalibrationViewModel(application: Application) : AndroidViewModel(applicat
     private val _state = MutableStateFlow(CalibrationUiState())
     val state: StateFlow<CalibrationUiState> = _state
 
+    private var sensorJob: Job? = null
+
     init {
-        viewModelScope.launch {
+        resume()
+    }
+
+    fun resume() {
+        if (sensorJob?.isActive == true) return
+        sensorJob = viewModelScope.launch {
             combine(
                 orientationFlow(getApplication()),
                 repo.calibrationFlow,
@@ -64,6 +72,11 @@ class CalibrationViewModel(application: Application) : AndroidViewModel(applicat
                 )
             }
         }
+    }
+
+    fun pause() {
+        sensorJob?.cancel()
+        sensorJob = null
     }
 
     fun startCalibration() {

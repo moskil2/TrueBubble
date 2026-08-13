@@ -1,9 +1,5 @@
 package com.truebubble.ui.menu
 
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Context
-import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
@@ -18,6 +14,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.automirrored.outlined.ArrowForward
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -31,7 +28,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import com.truebubble.R
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -42,11 +38,15 @@ import com.truebubble.ui.theme.AccentOk
 import com.truebubble.ui.theme.AccentOkDark
 import com.truebubble.ui.theme.LocalAppColors
 
+private const val PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=app.spotrobotics.truebubble"
+private const val SUPPORT_FORM_URL = "https://spotrobotics.app/support/"
+private const val SPOTROBOTICS_URL = "https://spotrobotics.app"
+private const val PRIVACY_POLICY_URL = "https://spotrobotics.app/truebubble/privacy.html"
+
 @Composable
 fun MenuScreen(onBack: () -> Unit) {
     val c = LocalAppColors.current
     val s = LocalAppStrings.current
-    val context = LocalContext.current
     val scrollState = rememberScrollState()
 
     LaunchedEffect(Unit) { scrollState.scrollTo(0) }
@@ -103,7 +103,7 @@ fun MenuScreen(onBack: () -> Unit) {
                         color = c.text,
                     )
                     Text(
-                        text = "V${BuildConfig.VERSION_NAME}",
+                        text = "${s.versionLabel} ${BuildConfig.VERSION_NAME}",
                         fontSize = 13.sp,
                         color = c.text2,
                     )
@@ -115,24 +115,45 @@ fun MenuScreen(onBack: () -> Unit) {
                 }
             }
 
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 20.dp),
-            ) {
-                Box(
+            run {
+                val uriHandler = LocalUriHandler.current
+                Column(
                     modifier = Modifier
-                        .clip(RoundedCornerShape(8.dp))
+                        .fillMaxWidth()
+                        .padding(bottom = 20.dp)
+                        .clip(RoundedCornerShape(14.dp))
                         .background(c.surface)
-                        .border(1.dp, c.line, RoundedCornerShape(8.dp))
-                        .padding(horizontal = 12.dp, vertical = 6.dp),
+                        .border(1.dp, c.line, RoundedCornerShape(14.dp)),
                 ) {
-                    Text(
-                        text = "Created by Tomasz Pieczara",
-                        fontSize = 12.sp,
-                        color = c.text2,
-                        fontWeight = FontWeight.Medium,
-                    )
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { uriHandler.openUri(PLAY_STORE_URL) }
+                            .padding(horizontal = 16.dp, vertical = 14.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        Icon(Icons.Outlined.Star, contentDescription = null, tint = AccentOk, modifier = Modifier.size(20.dp))
+                        Text(s.rateApp, fontSize = 15.sp, fontWeight = FontWeight.Medium, color = c.text, modifier = Modifier.weight(1f))
+                        Icon(Icons.AutoMirrored.Outlined.ArrowForward, contentDescription = null, tint = c.text3, modifier = Modifier.size(18.dp))
+                    }
+                    HorizontalDivider(color = c.line, thickness = 1.dp)
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 14.dp),
+                        verticalArrangement = Arrangement.spacedBy(2.dp),
+                    ) {
+                        Text("Created by", fontSize = 12.sp, color = c.text2, fontWeight = FontWeight.Medium)
+                        Text("Tomasz Pieczara", fontSize = 14.sp, color = c.text, fontWeight = FontWeight.SemiBold)
+                        Text(
+                            text = "SpotRobotics",
+                            fontSize = 12.sp,
+                            color = AccentOk,
+                            fontWeight = FontWeight.Medium,
+                            modifier = Modifier.clickable { uriHandler.openUri(SPOTROBOTICS_URL) },
+                        )
+                    }
                 }
             }
 
@@ -140,50 +161,30 @@ fun MenuScreen(onBack: () -> Unit) {
 
             // ── Accordion tiles ──────────────────────────────────────────────
 
-            AccordionTile(icon = Icons.Outlined.Favorite, title = s.supportTitle) {
-                val uriHandler = LocalUriHandler.current
-                Text(
-                    text = s.supportText,
-                    fontSize = 13.sp,
-                    color = c.text2,
-                    lineHeight = 20.sp,
-                )
-                Spacer(Modifier.height(12.dp))
-                val website = "spotrobotics.app"
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { uriHandler.openUri("https://spotrobotics.app") },
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        text = website,
-                        fontSize = 16.sp,
-                        color = AccentOk,
-                        fontWeight = FontWeight.Medium,
-                        modifier = Modifier.weight(1f),
-                    )
-                    IconButton(
-                        onClick = {
-                            val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                            clipboard.setPrimaryClip(ClipData.newPlainText("website", website))
-                            Toast.makeText(context, s.copiedToClipboard, Toast.LENGTH_SHORT).show()
-                        },
-                        modifier = Modifier.size(36.dp),
-                    ) {
-                        Icon(Icons.Outlined.ContentCopy, contentDescription = null, tint = AccentOk, modifier = Modifier.size(18.dp))
-                    }
-                }
-            }
-
             AccordionTile(icon = Icons.Outlined.Security, title = s.securityTitle) {
+                val uriHandler = LocalUriHandler.current
                 Text(
                     text = s.securityText,
                     fontSize = 13.sp,
                     color = c.text2,
                     lineHeight = 20.sp,
                 )
+                Spacer(Modifier.height(4.dp))
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { uriHandler.openUri(PRIVACY_POLICY_URL) },
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(Icons.Outlined.Link, contentDescription = null, tint = AccentOk, modifier = Modifier.size(14.dp))
+                    Text(
+                        text = s.privacyLinkLabel,
+                        fontSize = 13.sp,
+                        color = AccentOk,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                }
             }
 
             AccordionTile(icon = Icons.Outlined.Policy, title = s.gdprTitle) {
@@ -195,24 +196,38 @@ fun MenuScreen(onBack: () -> Unit) {
                 )
             }
 
+            AccordionTile(icon = Icons.Outlined.Description, title = s.termsTitle) {
+                Text(
+                    text = s.termsBody,
+                    fontSize = 13.sp,
+                    color = c.text2,
+                    lineHeight = 20.sp,
+                )
+            }
+
             AccordionTile(icon = Icons.Outlined.Email, title = s.contactTitle) {
-                val email = "tomasz.pieczara@gazeta.pl"
+                val uriHandler = LocalUriHandler.current
+                Text(
+                    text = s.contactBody,
+                    fontSize = 13.sp,
+                    color = c.text2,
+                    lineHeight = 20.sp,
+                )
+                Spacer(Modifier.height(4.dp))
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { uriHandler.openUri(SUPPORT_FORM_URL) },
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Text(email, fontSize = 13.sp, color = c.text, modifier = Modifier.weight(1f))
-                    IconButton(
-                        onClick = {
-                            val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                            clipboard.setPrimaryClip(ClipData.newPlainText("email", email))
-                            Toast.makeText(context, s.copiedToClipboard, Toast.LENGTH_SHORT).show()
-                        },
-                        modifier = Modifier.size(36.dp),
-                    ) {
-                        Icon(Icons.Outlined.ContentCopy, contentDescription = null, tint = AccentOk, modifier = Modifier.size(18.dp))
-                    }
+                    Icon(Icons.Outlined.Link, contentDescription = null, tint = AccentOk, modifier = Modifier.size(14.dp))
+                    Text(
+                        text = s.contactLinkLabel,
+                        fontSize = 13.sp,
+                        color = AccentOk,
+                        fontWeight = FontWeight.SemiBold,
+                    )
                 }
             }
 

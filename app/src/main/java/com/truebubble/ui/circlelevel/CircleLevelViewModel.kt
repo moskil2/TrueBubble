@@ -7,6 +7,7 @@ import com.truebubble.data.SettingsRepository
 import com.truebubble.feedback.FeedbackController
 import com.truebubble.sensor.CalibrationRepository
 import com.truebubble.sensor.orientationFlow
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -43,10 +44,17 @@ class CircleLevelViewModel(application: Application) : AndroidViewModel(applicat
     private val _state = MutableStateFlow(CircleLevelUiState())
     val state: StateFlow<CircleLevelUiState> = _state
 
+    private var sensorJob: Job? = null
+
     init {
-        viewModelScope.launch {
+        resume()
+    }
+
+    fun resume() {
+        if (sensorJob?.isActive == true) return
+        sensorJob = viewModelScope.launch {
             combine(
-                orientationFlow(application),
+                orientationFlow(getApplication()),
                 calibrationRepo.calibrationFlow,
                 settingsRepo.settingsFlow,
             ) { orientation, cal, settings -> Triple(orientation, cal, settings) }
@@ -74,6 +82,11 @@ class CircleLevelViewModel(application: Application) : AndroidViewModel(applicat
         }
     }
 
+    fun pause() {
+        sensorJob?.cancel()
+        sensorJob = null
+    }
+
     fun toggleLock() {
         val current = _state.value
         if (current.locked) {
@@ -86,6 +99,7 @@ class CircleLevelViewModel(application: Application) : AndroidViewModel(applicat
 
     override fun onCleared() {
         super.onCleared()
+        pause()
         feedback.release()
     }
 

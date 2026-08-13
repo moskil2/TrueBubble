@@ -4,7 +4,7 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -34,7 +34,7 @@ fun MiniHorizontalVial(
         animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium),
         label = "mini_roll",
     )
-    Canvas(modifier = Modifier.size(width, height)) {
+    Canvas(modifier = Modifier.requiredSize(width, height)) {
         drawMiniVialBody(horizontal = true, isDark = c.isDark, vialTop = c.vialTop, vialBottom = c.vialBottom, line = c.line)
         val inset = 4.dp.toPx()
         val bubR = (size.height / 2f - inset).coerceAtLeast(4.dp.toPx())
@@ -61,7 +61,7 @@ fun MiniVerticalVial(
         animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium),
         label = "mini_pitch",
     )
-    Canvas(modifier = Modifier.size(width, height)) {
+    Canvas(modifier = Modifier.requiredSize(width, height)) {
         drawMiniVialBody(horizontal = false, isDark = c.isDark, vialTop = c.vialTop, vialBottom = c.vialBottom, line = c.line)
         val inset = 4.dp.toPx()
         val bubR = (size.width / 2f - inset).coerceAtLeast(4.dp.toPx())

@@ -14,12 +14,16 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.truebubble"
+        applicationId = "app.spotrobotics.truebubble"
         minSdk = 26
         targetSdk = 36
-        versionCode = 21
-        versionName = "0.21"
+        versionCode = 26
+        versionName = "0.26"
         buildConfigField("String", "BUILD_TIME", "\"$buildTime\"")
+        // App UI strings are hardcoded in AppStrings.kt (not Android resources) for these
+        // 10 languages; this only trims the AndroidX/Compose libraries' own bundled
+        // resource strings (e.g. accessibility labels) down to the same locale set.
+        resourceConfigurations += listOf("en", "pl", "es", "de", "fr", "pt", "ar", "ru", "in", "id", "ja")
     }
 
     signingConfigs {
@@ -37,6 +41,9 @@ android {
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             signingConfig = signingConfigs.getByName("release")
+            ndk {
+                debugSymbolLevel = "SYMBOL_TABLE"
+            }
         }
         debug {
             applicationIdSuffix = ""

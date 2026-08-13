@@ -10,7 +10,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Bookmark
 import androidx.compose.material.icons.outlined.BookmarkBorder
@@ -22,6 +24,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -43,6 +46,9 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.truebubble.ui.common.MiniHorizontalVial
@@ -73,6 +79,20 @@ fun CircleLevelScreen(
     val activity = LocalContext.current as Activity
     var showLangMenu by remember { mutableStateOf(false) }
     val supportState = remember { MutableTransitionState(false) }
+
+    // Wstrzymaj/wznów czujnik ruchu razem z cyklem życia Activity (oszczędność baterii/CPU w tle)
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner, vm) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_RESUME -> vm.resume()
+                Lifecycle.Event.ON_PAUSE -> vm.pause()
+                else -> Unit
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
 
     val animRoll by animateFloatAsState(
         targetValue = state.roll,
@@ -118,9 +138,7 @@ fun CircleLevelScreen(
             TopBarButton(label = s.menuBtn, onClick = onMenuClick) {
                 Icon(Icons.Outlined.Menu, contentDescription = s.menuBtn, tint = c.text2, modifier = Modifier.size(22.dp))
             }
-            Spacer(Modifier.weight(1f))
             SupportTopBarButton(expanded = supportState.targetState, onClick = { supportState.targetState = !supportState.targetState })
-            Spacer(Modifier.weight(1f))
             Box {
                 TopBarButton(label = "Lang", onClick = { showLangMenu = true }) {
                     Text(flagFor(s.langCode), fontSize = 20.sp)
@@ -134,28 +152,27 @@ fun CircleLevelScreen(
                     }
                 }
             }
-            Spacer(Modifier.width(10.dp))
             TopBarButton(label = s.settingsBtn, onClick = onSettingsClick) {
                 Icon(Icons.Outlined.Tune, contentDescription = s.settingsBtn, tint = c.text2, modifier = Modifier.size(22.dp))
             }
-            Spacer(Modifier.width(10.dp))
             TopBarButton(label = s.closeBtn, onClick = { activity.finish() }) {
                 Icon(Icons.Outlined.Close, contentDescription = s.closeBtn, tint = c.text2, modifier = Modifier.size(22.dp))
             }
         }
 
-        // Hero — spacery zamiast Arrangement.Center
+        // Hero
         Box(
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth(),
         ) {
             Column(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
             ) {
-            Spacer(Modifier.weight(1f))
-
             Canvas(modifier = Modifier.size(280.dp)) {
                 drawBullseye(
                     animRoll = animRoll,
@@ -218,8 +235,6 @@ fun CircleLevelScreen(
                     MiniHorizontalVial(roll = state.roll, width = 64.dp, height = 26.dp, highContrast = state.highContrastBubble, bubbleColor = state.bubbleColor, isMetallic = state.isMetallicBubble)
                 }
             }
-
-            Spacer(Modifier.weight(1f))
             }
             SupportOverlay(supportState)
         }
